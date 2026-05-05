@@ -23,12 +23,12 @@ jobs:
         
       # set up version of python
       - name: Set up python
-        uses: action/setup-python@v5
+        uses: actions/setup-python@v5
         with:
           python-version: 3.12
           
       - name: Install dependencies
-        run: pip install -m requirements.txt
+        run: pip install -r requirements.txt
         
       # run the pytest and our tests
       - name: Run tests
