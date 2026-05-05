@@ -1,0 +1,51 @@
+name: CI/CD Github Actions Demo Workflow
+
+# create triggeers for the workflow with 3 triggers
+on:
+  # set up branches triggere name based on the branch you want to trigger the workflow on, in this case we want to trigger the workflow on the main branch
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+    
+  # alow manual trigger of the workflow from the GitHub console 
+  workflow_dispatch: {}
+
+# create jobs
+jobs:
+  # test job is the CI part of our test and runs out tests automatically
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      # fetching the repository code into the runner 
+      - name: checkout code
+        uses: actions/checkout@v4
+        
+      # set up version of python
+      - name: Set up python
+        uses: action/setup-python@v5
+        with:
+          python-version: 3.12
+          
+      - name: Install dependencies
+        run: pip install -m requirements.txt
+        
+      # run the pytest and our tests
+      - name: Run tests
+        run: pytest
+        
+  # deploy job is the CD part of our test and it deploys this new version of the code to the deployment server
+  deploy:
+   needs: test # this ensures that the test job and by extension the tests must pass before the deployement runs 
+   runs-on: ubuntu-latest
+   
+   # this prevent pull PR or other branches from deployment by mistake
+   # github.ref: represents the branch or tag being worked on which is main.
+   # It only continues to the deployment steps if the current branch is main, ensuring that only changes merged into main trigger a deployment.
+   
+   if: github.ref == 'refs/heads/main' 
+   steps:
+     - name: Trigger Render Deployment
+       run: |
+         curl -X POST "${{ secrets..RENDER_DEPLOY_HOOK }}"
+   
